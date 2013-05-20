@@ -5,9 +5,27 @@ require_once 'Default.class.php';
 class Type_GenericIO extends Type_Default {
 	
 	function rrd_gen_graph() {
+		//$this->logtrace(sprintf("%s::%s",__CLASS__,__METHOD__ ));exit;
 		$rrdgraph = $this->rrd_options();
 
 		$sources = $this->rrd_get_sources();
+
+		/* This filters out the tinstances names from our sources, since it shouldn't be included */
+		$new_sources=array();
+		foreach($sources as $source) {
+			$replacement=preg_replace('/^\-/','', str_replace($this->tinstances,'', $source));
+			if(strlen($replacement)) {
+				$new_sources[]=$replacement;
+			} else {
+				$new_sources[]=$source;
+			}
+		}
+	
+		if (!empty($new_sources)) {
+			$sources=$new_sources;
+			// $this->logtrace(sprintf("%s - %s",__METHOD__ ,print_r($sources,true)));
+		}
+		/* Done filtering */
 
 		$raw = null;
 		if ($this->scale)
@@ -42,7 +60,18 @@ class Type_GenericIO extends Type_Default {
 						crc32hex($sources[0]), crc32hex($sources[1]));
 
 		$i = 0;
+      
+		// $this->logtrace(sprintf("%s - %s",__METHOD__ ,print_r($this->tinstances,true)));
+		// $this->logtrace(sprintf("%s - %s",__METHOD__ ,print_r($sources,true)));
+       
 		foreach($sources as $source) {
+			//$source_filtered=preg_replace('/^\-/','', str_replace($this->tinstances,'', $source));
+			if (!isset($this->colors[$source])) {
+				$this->logtrace(sprintf("%s -> GetSources: '%s'",__METHOD__ , print_r($this->rrd_get_sources(),true)));
+				$this->logtrace(sprintf("%s -> Tinstances: '%s'",__METHOD__ , print_r($this->tinstances,true)));
+				$this->logtrace(sprintf("%s -> Source: '%s'",__METHOD__ , $source));
+			}
+
 			$rrdgraph[] = sprintf('AREA:avg_%s%s#%s', crc32hex($source), $i == 1 ? '_neg' : '', $this->get_faded_color($this->colors[$source]));
 			$i++;
 		}

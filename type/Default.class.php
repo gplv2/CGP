@@ -27,6 +27,8 @@ class Type_Default {
 	var $tinstances;
 	var $identifiers;
 
+	var $fp_logfile;
+
 	function __construct($config) {
 		$this->datadir = $config['datadir'];
 		$this->rrdtool = $config['rrdtool'];
@@ -42,6 +44,22 @@ class Type_Default {
 		$this->graph_type = $config['graph_type'];
 		$this->negative_io = $config['negative_io'];
 		$this->graph_smooth = $config['graph_smooth'];
+
+		$this->logfile = $config['logfile'];
+
+		if (!empty($this->logfile)) {
+			$this->fp_logfile = fopen($this->logfile, 'a+');
+
+			if (!is_resource($this->fp_logfile)) {
+				trigger_error(sprintf('log file %s write problem',$this->logfile));
+			}       
+		}
+	}
+
+   public function logtrace($msg) {
+		if (is_resource($this->fp_logfile)) {
+			fwrite($this->fp_logfile, $msg ."\n" );
+		}
 	}
 
 	function rainbow_colors() {
